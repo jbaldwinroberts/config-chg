@@ -29,6 +29,11 @@ merge them together. We have the following requirements:
    by a dot-separated path; this should work for both sections
    and for individual keys, no matter how deeply nested.
    
+3. Your code should expose a method that accepts a string with 
+   the dotted notation, eg: `get("database.host")` please do not 
+   just convert the JSON into an object, the aim of this test is
+   to see how you implement that retrival logic
+   
 So, for the following configuration file:
 ```json
 {
