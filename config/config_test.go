@@ -144,11 +144,21 @@ func TestGet(t *testing.T) {
 	})
 
 	t.Run("get an outer section", func(t *testing.T) {
-
+		got := c.get("database")
+		assertValue(t, got, map[string]any{
+			"host":     "mysql",
+			"port":     float64(3306),
+			"username": "divido",
+			"password": "divido",
+		})
 	})
 
 	t.Run("get an inner section", func(t *testing.T) {
-
+		got := c.get("cache.redis")
+		assertValue(t, got, map[string]any{
+			"host": "redis",
+			"port": float64(6379),
+		})
 	})
 }
 
