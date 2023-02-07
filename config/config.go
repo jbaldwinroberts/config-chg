@@ -22,7 +22,10 @@ func New(fs fs.FS) Config {
 	}
 }
 
-func (c *Config) loadJson(filename string) error {
+// LoadJson loads the config in the specified filename
+// If the config already exists it will merge the new config
+// into the existing config, overwriting any values that already exist
+func (c *Config) LoadJson(filename string) error {
 	file, err := fs.ReadFile(c.fileSystem, filename)
 	if err != nil {
 		return err
@@ -38,7 +41,10 @@ func (c *Config) loadJson(filename string) error {
 	return mergo.Merge(&c.config, data, mergo.WithOverride)
 }
 
-func (c *Config) get(path string) any {
+// Get retrieves the config specified by the path
+// It will return an empty string if the config specified
+// by the path does not exist
+func (c *Config) Get(path string) any {
 	return retrieve(c.config, path)
 }
 

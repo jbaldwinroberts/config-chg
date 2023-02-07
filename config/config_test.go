@@ -24,7 +24,7 @@ const (
 	}`
 
 	// I've removed the unchanged fields from configLocal to test that
-	// existing fields in the config above don't get changed or removed
+	// existing fields in the config above don't Get changed or removed
 	configLocal = `{
   "environment": "development",
   "database": {
@@ -45,7 +45,7 @@ func TestLoadJson(t *testing.T) {
 		fs := fstest.MapFS{}
 
 		c := New(fs)
-		err := c.loadJson("missing.json")
+		err := c.LoadJson("missing.json")
 		assertError(t, err)
 	})
 
@@ -55,7 +55,7 @@ func TestLoadJson(t *testing.T) {
 		}
 
 		c := New(fs)
-		err := c.loadJson("configInvalid.json")
+		err := c.LoadJson("configInvalid.json")
 		assertError(t, err)
 	})
 
@@ -65,7 +65,7 @@ func TestLoadJson(t *testing.T) {
 		}
 
 		c := New(fs)
-		err := c.loadJson("config.json")
+		err := c.LoadJson("config.json")
 		assertNilError(t, err)
 
 		want := map[string]any{
@@ -94,9 +94,9 @@ func TestLoadJson(t *testing.T) {
 		}
 
 		c := New(fs)
-		err := c.loadJson("config.json")
+		err := c.LoadJson("config.json")
 		assertNilError(t, err)
-		err = c.loadJson("configLocal.json")
+		err = c.LoadJson("configLocal.json")
 		assertNilError(t, err)
 
 		want := map[string]any{
@@ -125,26 +125,26 @@ func TestGet(t *testing.T) {
 	}
 
 	c := New(fs)
-	err := c.loadJson("config.json")
+	err := c.LoadJson("config.json")
 	assertNilError(t, err)
 
-	t.Run("get a non-existent value", func(t *testing.T) {
-		got := c.get("protocol")
+	t.Run("Get a non-existent value", func(t *testing.T) {
+		got := c.Get("protocol")
 		assertValue(t, got, "")
 	})
 
-	t.Run("get an outer value", func(t *testing.T) {
-		got := c.get("environment")
+	t.Run("Get an outer value", func(t *testing.T) {
+		got := c.Get("environment")
 		assertValue(t, got, "production")
 	})
 
-	t.Run("get an inner value", func(t *testing.T) {
-		got := c.get("cache.redis.port")
+	t.Run("Get an inner value", func(t *testing.T) {
+		got := c.Get("cache.redis.port")
 		assertValue(t, got, float64(6379))
 	})
 
-	t.Run("get an outer section", func(t *testing.T) {
-		got := c.get("database")
+	t.Run("Get an outer section", func(t *testing.T) {
+		got := c.Get("database")
 		assertValue(t, got, map[string]any{
 			"host":     "mysql",
 			"port":     float64(3306),
@@ -153,8 +153,8 @@ func TestGet(t *testing.T) {
 		})
 	})
 
-	t.Run("get an inner section", func(t *testing.T) {
-		got := c.get("cache.redis")
+	t.Run("Get an inner section", func(t *testing.T) {
+		got := c.Get("cache.redis")
 		assertValue(t, got, map[string]any{
 			"host": "redis",
 			"port": float64(6379),
@@ -166,7 +166,7 @@ func assertError(t *testing.T, err error) {
 	t.Helper()
 
 	if err == nil {
-		t.Fatalf("did not get expected error")
+		t.Fatalf("did not Get expected error")
 	}
 }
 
