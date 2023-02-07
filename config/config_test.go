@@ -84,7 +84,7 @@ func TestLoadJson(t *testing.T) {
 			},
 		}
 
-		assertMap(t, c.config, want)
+		assertValue(t, c.config, want)
 	})
 
 	t.Run("with multiple valid json files", func(t *testing.T) {
@@ -115,7 +115,7 @@ func TestLoadJson(t *testing.T) {
 			},
 		}
 
-		assertMap(t, c.config, want)
+		assertValue(t, c.config, want)
 	})
 }
 
@@ -178,13 +178,13 @@ func assertNilError(t *testing.T, err error) {
 	}
 }
 
-func assertMap(t *testing.T, got, want map[string]any) {
-	t.Helper()
-
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("assert mismatch (-want +got):\n%s", diff)
-	}
-}
+//func assertMap(t *testing.T, got, want map[string]any) {
+//	t.Helper()
+//
+//	if diff := cmp.Diff(want, got); diff != "" {
+//		t.Errorf("assert mismatch (-want +got):\n%s", diff)
+//	}
+//}
 
 func assertValue(t *testing.T, got, want any) {
 	t.Helper()
