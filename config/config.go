@@ -1,3 +1,6 @@
+// Package config supports loading one or more configuration files
+// from disk and merging them together. This package also supports
+// retrieving parts of the configuration by a dot-separated path
 package config
 
 import (
@@ -9,7 +12,7 @@ import (
 	"sync"
 )
 
-// Parser defines the function signature of a function that can
+// Parser defines the function signature of the function that can
 // be passed into Load. This enables the user to specify what
 // parser to use, enabling support for different file types.
 type Parser func(data []byte, v any) error
@@ -21,9 +24,9 @@ type Config struct {
 	mu         sync.RWMutex
 }
 
-// New creates an instance of config
+// New creates an instance of config.
 // The file system and writer are passed in to improve
-// testability by removing the dependency on a real file system, or stdout
+// testability by removing the dependency on a real file system, or stdout.
 func New(fs fs.FS, writer io.Writer) Config {
 	return Config{
 		fileSystem: fs,
@@ -33,9 +36,9 @@ func New(fs fs.FS, writer io.Writer) Config {
 	}
 }
 
-// Load loads the config in the specified filename, using the specified parser function
+// Load reads the config from the specified filename, using the specified parser function.
 // If the config already exists it will merge the new config
-// into the existing config, overwriting any values that already exist
+// into the existing config, overwriting any values that already exist.
 func (c *Config) Load(filename string, parser Parser) {
 	file, err := fs.ReadFile(c.fileSystem, filename)
 	if err != nil {
@@ -63,7 +66,7 @@ func (c *Config) Load(filename string, parser Parser) {
 	_ = mergo.Merge(&c.config, data, mergo.WithOverride)
 }
 
-// Get retrieves the config specified by the path
+// Get retrieves the config specified by the path.
 // It will return an empty string if the config specified
 // by the path does not exist
 func (c *Config) Get(path string) any {

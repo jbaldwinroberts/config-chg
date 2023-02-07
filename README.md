@@ -14,6 +14,14 @@ docker run config-chg
 go test -race -count=1 ./...
 ```
 
+# Viewing the documentation
+```bash
+go get golang.org/x/tools/cmd/godoc
+godoc -http=:1337
+```
+
+Open `http://localhost:1337/pkg/config-chg/config/` to view.
+
 # Coding Challenge (Configuration)
 Hi! If you're reading this, it's because you've been invited to take 
 a coding challenge for an engineering role at Divido.
