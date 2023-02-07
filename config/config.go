@@ -2,7 +2,9 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/imdario/mergo"
+	"io"
 	"io/fs"
 	"strings"
 )
@@ -10,35 +12,43 @@ import (
 type Config struct {
 	fileSystem fs.FS
 	config     map[string]any
+	writer     io.Writer
 }
 
 // New creates an instance of config
-// The file system is passed in to improve testability by removing
-// the dependency on a real file system
-func New(fs fs.FS) Config {
+// The file system and writer are passed in to improve
+// testability by removing the dependency on a real file system, or stdout
+func New(fs fs.FS, writer io.Writer) Config {
 	return Config{
 		fileSystem: fs,
 		config:     map[string]any{},
+		writer:     writer,
 	}
 }
 
 // LoadJson loads the config in the specified filename
 // If the config already exists it will merge the new config
 // into the existing config, overwriting any values that already exist
-func (c *Config) LoadJson(filename string) error {
+func (c *Config) LoadJson(filename string) {
 	file, err := fs.ReadFile(c.fileSystem, filename)
 	if err != nil {
-		return err
+		// Added this to handle the requirement in note 2
+		// I would prefer to return the error
+		_, _ = fmt.Fprintf(c.writer, err.Error())
+		return
 	}
 
 	var data map[string]any
 	if err = json.Unmarshal(file, &data); err != nil {
-		return err
+		// Added this to handle the requirement in note 2
+		// I would prefer to return the error
+		_, _ = fmt.Fprintf(c.writer, err.Error())
+		return
 	}
 
 	// Merge data into any existing config
 	// Overwrites any values that exist in both existing config and data
-	return mergo.Merge(&c.config, data, mergo.WithOverride)
+	_ = mergo.Merge(&c.config, data, mergo.WithOverride)
 }
 
 // Get retrieves the config specified by the path

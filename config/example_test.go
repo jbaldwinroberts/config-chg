@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"bytes"
 	. "config-chg/config"
 	"fmt"
 	"testing/fstest"
@@ -28,10 +29,10 @@ func ExampleGet_value() {
 	fs := fstest.MapFS{
 		"config.json": {Data: []byte(config)},
 	}
+	buffer := &bytes.Buffer{}
+	c := New(fs, buffer)
 
-	c := New(fs)
 	c.LoadJson("config.json")
-
 	value := c.Get("environment")
 	fmt.Println(value)
 	// Output: production
@@ -41,10 +42,10 @@ func ExampleGet_section() {
 	fs := fstest.MapFS{
 		"config.json": {Data: []byte(config)},
 	}
+	buffer := &bytes.Buffer{}
+	c := New(fs, buffer)
 
-	c := New(fs)
 	c.LoadJson("config.json")
-
 	value := c.Get("database")
 	fmt.Println(value)
 	// Output: map[host:mysql password:divido port:3306 username:divido]

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"github.com/google/go-cmp/cmp"
 	"testing"
 	"testing/fstest"
@@ -43,30 +44,33 @@ const (
 func TestLoadJson(t *testing.T) {
 	t.Run("with a missing file", func(t *testing.T) {
 		fs := fstest.MapFS{}
+		buffer := &bytes.Buffer{}
+		c := New(fs, buffer)
 
-		c := New(fs)
-		err := c.LoadJson("missing.json")
-		assertError(t, err)
+		c.LoadJson("missing.json")
+		assertError(t, buffer)
 	})
 
 	t.Run("with an invalid json file", func(t *testing.T) {
 		fs := fstest.MapFS{
 			"configInvalid.json": {Data: []byte(configInvalid)},
 		}
+		buffer := &bytes.Buffer{}
+		c := New(fs, buffer)
 
-		c := New(fs)
-		err := c.LoadJson("configInvalid.json")
-		assertError(t, err)
+		c.LoadJson("configInvalid.json")
+		assertError(t, buffer)
 	})
 
 	t.Run("with a single valid json file", func(t *testing.T) {
 		fs := fstest.MapFS{
 			"config.json": {Data: []byte(config)},
 		}
+		buffer := &bytes.Buffer{}
+		c := New(fs, buffer)
 
-		c := New(fs)
-		err := c.LoadJson("config.json")
-		assertNilError(t, err)
+		c.LoadJson("config.json")
+		assertNilError(t, buffer)
 
 		want := map[string]any{
 			"environment": "production",
@@ -92,12 +96,13 @@ func TestLoadJson(t *testing.T) {
 			"config.json":      {Data: []byte(config)},
 			"configLocal.json": {Data: []byte(configLocal)},
 		}
+		buffer := &bytes.Buffer{}
+		c := New(fs, buffer)
 
-		c := New(fs)
-		err := c.LoadJson("config.json")
-		assertNilError(t, err)
-		err = c.LoadJson("configLocal.json")
-		assertNilError(t, err)
+		c.LoadJson("config.json")
+		assertNilError(t, buffer)
+		c.LoadJson("configLocal.json")
+		assertNilError(t, buffer)
 
 		want := map[string]any{
 			"environment": "development",
@@ -123,10 +128,11 @@ func TestGet(t *testing.T) {
 	fs := fstest.MapFS{
 		"config.json": {Data: []byte(config)},
 	}
+	buffer := &bytes.Buffer{}
+	c := New(fs, buffer)
 
-	c := New(fs)
-	err := c.LoadJson("config.json")
-	assertNilError(t, err)
+	c.LoadJson("config.json")
+	assertNilError(t, buffer)
 
 	t.Run("Get a non-existent value", func(t *testing.T) {
 		got := c.Get("protocol")
@@ -162,29 +168,21 @@ func TestGet(t *testing.T) {
 	})
 }
 
-func assertError(t *testing.T, err error) {
+func assertError(t *testing.T, buffer *bytes.Buffer) {
 	t.Helper()
 
-	if err == nil {
-		t.Fatalf("did not Get expected error")
+	if buffer.Len() == 0 {
+		t.Fatalf("did not get expected error")
 	}
 }
 
-func assertNilError(t *testing.T, err error) {
+func assertNilError(t *testing.T, buffer *bytes.Buffer) {
 	t.Helper()
 
-	if err != nil {
-		t.Fatalf("got an unexpected error: %v", err)
+	if buffer.Len() != 0 {
+		t.Fatalf("got an unexpected error: %v", buffer.String())
 	}
 }
-
-//func assertMap(t *testing.T, got, want map[string]any) {
-//	t.Helper()
-//
-//	if diff := cmp.Diff(want, got); diff != "" {
-//		t.Errorf("assert mismatch (-want +got):\n%s", diff)
-//	}
-//}
 
 func assertValue(t *testing.T, got, want any) {
 	t.Helper()
