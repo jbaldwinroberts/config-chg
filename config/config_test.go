@@ -119,6 +119,39 @@ func TestLoadJson(t *testing.T) {
 	})
 }
 
+func TestGet(t *testing.T) {
+	fs := fstest.MapFS{
+		"config.json": {Data: []byte(config)},
+	}
+
+	c := New(fs)
+	err := c.loadJson("config.json")
+	assertNilError(t, err)
+
+	t.Run("get a non-existent value", func(t *testing.T) {
+		got := c.get("protocol")
+		assertValue(t, got, "")
+	})
+
+	t.Run("get an outer value", func(t *testing.T) {
+		got := c.get("environment")
+		assertValue(t, got, "production")
+	})
+
+	t.Run("get an inner value", func(t *testing.T) {
+		got := c.get("cache.redis.port")
+		assertValue(t, got, float64(6379))
+	})
+
+	t.Run("get an outer section", func(t *testing.T) {
+
+	})
+
+	t.Run("get an inner section", func(t *testing.T) {
+
+	})
+}
+
 func assertError(t *testing.T, err error) {
 	t.Helper()
 
@@ -136,6 +169,14 @@ func assertNilError(t *testing.T, err error) {
 }
 
 func assertMap(t *testing.T, got, want map[string]any) {
+	t.Helper()
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("assert mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func assertValue(t *testing.T, got, want any) {
 	t.Helper()
 
 	if diff := cmp.Diff(want, got); diff != "" {
