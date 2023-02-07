@@ -1,13 +1,17 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/imdario/mergo"
 	"io"
 	"io/fs"
 	"strings"
 )
+
+// Parser defines the function signature of a function that can
+// be passed into Load. This enables the user to specify what
+// parser to use, enabling support for different file types.
+type Parser func(data []byte, v any) error
 
 type Config struct {
 	fileSystem fs.FS
@@ -26,10 +30,10 @@ func New(fs fs.FS, writer io.Writer) Config {
 	}
 }
 
-// LoadJson loads the config in the specified filename
+// Load loads the config in the specified filename, using the specified parser function
 // If the config already exists it will merge the new config
 // into the existing config, overwriting any values that already exist
-func (c *Config) LoadJson(filename string) {
+func (c *Config) Load(filename string, parser Parser) {
 	file, err := fs.ReadFile(c.fileSystem, filename)
 	if err != nil {
 		// Added this to handle the requirement in note 2
@@ -39,7 +43,7 @@ func (c *Config) LoadJson(filename string) {
 	}
 
 	var data map[string]any
-	if err = json.Unmarshal(file, &data); err != nil {
+	if err = parser(file, &data); err != nil {
 		// Added this to handle the requirement in note 2
 		// I would prefer to return the error
 		_, _ = fmt.Fprintf(c.writer, err.Error())

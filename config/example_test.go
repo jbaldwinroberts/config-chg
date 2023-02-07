@@ -3,6 +3,7 @@ package config_test
 import (
 	"bytes"
 	. "config-chg/config"
+	"encoding/json"
 	"fmt"
 	"testing/fstest"
 )
@@ -32,7 +33,7 @@ func ExampleGet_value() {
 	buffer := &bytes.Buffer{}
 	c := New(fs, buffer)
 
-	c.LoadJson("config.json")
+	c.Load("config.json", json.Unmarshal)
 	value := c.Get("environment")
 	fmt.Println(value)
 	// Output: production
@@ -45,7 +46,7 @@ func ExampleGet_section() {
 	buffer := &bytes.Buffer{}
 	c := New(fs, buffer)
 
-	c.LoadJson("config.json")
+	c.Load("config.json", json.Unmarshal)
 	value := c.Get("database")
 	fmt.Println(value)
 	// Output: map[host:mysql password:divido port:3306 username:divido]

@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"encoding/json"
 	"github.com/google/go-cmp/cmp"
 	"testing"
 	"testing/fstest"
@@ -47,7 +48,7 @@ func TestLoadJson(t *testing.T) {
 		buffer := &bytes.Buffer{}
 		c := New(fs, buffer)
 
-		c.LoadJson("missing.json")
+		c.Load("missing.json", json.Unmarshal)
 		assertError(t, buffer)
 	})
 
@@ -58,7 +59,7 @@ func TestLoadJson(t *testing.T) {
 		buffer := &bytes.Buffer{}
 		c := New(fs, buffer)
 
-		c.LoadJson("configInvalid.json")
+		c.Load("configInvalid.json", json.Unmarshal)
 		assertError(t, buffer)
 	})
 
@@ -69,7 +70,7 @@ func TestLoadJson(t *testing.T) {
 		buffer := &bytes.Buffer{}
 		c := New(fs, buffer)
 
-		c.LoadJson("config.json")
+		c.Load("config.json", json.Unmarshal)
 		assertNilError(t, buffer)
 
 		want := map[string]any{
@@ -99,9 +100,9 @@ func TestLoadJson(t *testing.T) {
 		buffer := &bytes.Buffer{}
 		c := New(fs, buffer)
 
-		c.LoadJson("config.json")
+		c.Load("config.json", json.Unmarshal)
 		assertNilError(t, buffer)
-		c.LoadJson("configLocal.json")
+		c.Load("configLocal.json", json.Unmarshal)
 		assertNilError(t, buffer)
 
 		want := map[string]any{
@@ -131,7 +132,7 @@ func TestGet(t *testing.T) {
 	buffer := &bytes.Buffer{}
 	c := New(fs, buffer)
 
-	c.LoadJson("config.json")
+	c.Load("config.json", json.Unmarshal)
 	assertNilError(t, buffer)
 
 	t.Run("Get a non-existent value", func(t *testing.T) {
