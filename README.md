@@ -1,3 +1,19 @@
+# Running locally
+```bash
+go run main.go
+```
+
+# Running in docker
+```bash
+docker build -t config-chg .
+docker run config-chg 
+```
+
+# Unit tests
+```bash
+go test -race -count=1 ./...
+```
+
 # Coding Challenge (Configuration)
 Hi! If you're reading this, it's because you've been invited to take 
 a coding challenge for an engineering role at Divido.
