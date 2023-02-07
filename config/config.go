@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"strings"
+	"sync"
 )
 
 // Parser defines the function signature of a function that can
@@ -17,6 +18,7 @@ type Config struct {
 	fileSystem fs.FS
 	config     map[string]any
 	writer     io.Writer
+	mu         sync.RWMutex
 }
 
 // New creates an instance of config
@@ -27,6 +29,7 @@ func New(fs fs.FS, writer io.Writer) Config {
 		fileSystem: fs,
 		config:     map[string]any{},
 		writer:     writer,
+		mu:         sync.RWMutex{},
 	}
 }
 
@@ -50,6 +53,11 @@ func (c *Config) Load(filename string, parser Parser) {
 		return
 	}
 
+	// Lock mutex for writing to prevent race condition when
+	// writing to the config map
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	// Merge data into any existing config
 	// Overwrites any values that exist in both existing config and data
 	_ = mergo.Merge(&c.config, data, mergo.WithOverride)
@@ -59,6 +67,11 @@ func (c *Config) Load(filename string, parser Parser) {
 // It will return an empty string if the config specified
 // by the path does not exist
 func (c *Config) Get(path string) any {
+	// Lock mutex for reading to prevent race condition when
+	// reading from the config map
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	return retrieve(c.config, path)
 }
 

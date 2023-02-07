@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/google/go-cmp/cmp"
+	"sync"
 	"testing"
 	"testing/fstest"
 )
@@ -167,6 +168,37 @@ func TestGet(t *testing.T) {
 			"port": float64(6379),
 		})
 	})
+}
+
+func TestConcurrency(t *testing.T) {
+	fs := fstest.MapFS{
+		"config.json":      {Data: []byte(config)},
+		"configLocal.json": {Data: []byte(configLocal)},
+	}
+	buffer := &bytes.Buffer{}
+	c := New(fs, buffer)
+
+	c.Load("config.json", json.Unmarshal)
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	// Attempt to read and write from the config in parallel
+	go func() {
+		got := c.Get("environment")
+		assertValue(t, got, "production")
+		wg.Done()
+	}()
+
+	go func() {
+		c.Load("configLocal.json", json.Unmarshal)
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	got := c.Get("environment")
+	assertValue(t, got, "development")
 }
 
 func assertError(t *testing.T, buffer *bytes.Buffer) {
