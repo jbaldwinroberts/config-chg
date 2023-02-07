@@ -23,18 +23,17 @@ const (
 	 }
 	}`
 
+	// I've removed the unchanged fields from configLocal to test that
+	// existing fields in the config above don't get changed or removed
 	configLocal = `{
   "environment": "development",
   "database": {
     "host": "127.0.0.1",
-    "port": 3306,
-    "username": "divido",
-    "password": "divido"
+    "port": 3306
   },
   "cache": {
     "redis": {
-      "host": "127.0.0.1",
-      "port": 6379
+      "host": "127.0.0.1"
     }
   }
 }`
@@ -88,36 +87,36 @@ func TestLoadJson(t *testing.T) {
 		assertMap(t, c.config, want)
 	})
 
-	//t.Run("with multiple valid json files", func(t *testing.T) {
-	//	fs := fstest.MapFS{
-	//		"config.json": {Data: []byte(config)},
-	//		"configLocal.json": {Data: []byte(configLocal)},
-	//	}
-	//
-	//	c := New(fs)
-	//	got, err := c.loadJson("config.json")
-	//
-	//
-	//	assertNilError(t, err)
-	//
-	//	want := map[string]any{
-	//		"environment": "production",
-	//		"database": map[string]any{
-	//			"host":     "mysql",
-	//			"port":     float64(3306),
-	//			"username": "divido",
-	//			"password": "divido",
-	//		},
-	//		"cache": map[string]any{
-	//			"redis": map[string]any{
-	//				"host": "redis",
-	//				"port": float64(6379),
-	//			},
-	//		},
-	//	}
-	//
-	//	assertMap(t, got, want)
-	//})
+	t.Run("with multiple valid json files", func(t *testing.T) {
+		fs := fstest.MapFS{
+			"config.json":      {Data: []byte(config)},
+			"configLocal.json": {Data: []byte(configLocal)},
+		}
+
+		c := New(fs)
+		err := c.loadJson("config.json")
+		assertNilError(t, err)
+		err = c.loadJson("configLocal.json")
+		assertNilError(t, err)
+
+		want := map[string]any{
+			"environment": "development",
+			"database": map[string]any{
+				"host":     "127.0.0.1",
+				"port":     float64(3306),
+				"username": "divido",
+				"password": "divido",
+			},
+			"cache": map[string]any{
+				"redis": map[string]any{
+					"host": "127.0.0.1",
+					"port": float64(6379),
+				},
+			},
+		}
+
+		assertMap(t, c.config, want)
+	})
 }
 
 func assertError(t *testing.T, err error) {

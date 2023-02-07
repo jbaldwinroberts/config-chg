@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/imdario/mergo"
 	"io/fs"
 )
 
@@ -10,6 +11,9 @@ type Config struct {
 	config     map[string]any
 }
 
+// New creates an instance of config
+// The file system is passed in to improve testability by removing
+// the dependency on a real file system
 func New(fs fs.FS) Config {
 	return Config{
 		fileSystem: fs,
@@ -28,7 +32,7 @@ func (c *Config) loadJson(filename string) error {
 		return err
 	}
 
-	c.config = data
-
-	return nil
+	// Merge data into any existing config
+	// Overwrites any values that exist in both existing config and data
+	return mergo.Merge(&c.config, data, mergo.WithOverride)
 }
