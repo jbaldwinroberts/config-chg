@@ -1,10 +1,10 @@
 package config_test
 
 import (
-	"bytes"
 	. "config-chg/config"
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing/fstest"
 )
 
@@ -26,12 +26,17 @@ const (
 	}`
 )
 
-func ExampleGet_value() {
+func ExampleConfig_load() {
+	c := New(os.DirFS("."), os.Stdout)
+
+	c.Load("config.json", json.Unmarshal)
+}
+
+func ExampleConfig_getValue() {
 	fs := fstest.MapFS{
 		"config.json": {Data: []byte(config)},
 	}
-	buffer := &bytes.Buffer{}
-	c := New(fs, buffer)
+	c := New(fs, os.Stdout)
 
 	c.Load("config.json", json.Unmarshal)
 	value := c.Get("environment")
@@ -39,12 +44,11 @@ func ExampleGet_value() {
 	// Output: production
 }
 
-func ExampleGet_section() {
+func ExampleConfig_getSection() {
 	fs := fstest.MapFS{
 		"config.json": {Data: []byte(config)},
 	}
-	buffer := &bytes.Buffer{}
-	c := New(fs, buffer)
+	c := New(fs, os.Stdout)
 
 	c.Load("config.json", json.Unmarshal)
 	value := c.Get("database")
