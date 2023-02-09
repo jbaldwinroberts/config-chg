@@ -4,6 +4,7 @@ import (
 	. "config-chg/config"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
 	"testing/fstest"
 )
@@ -30,6 +31,7 @@ func ExampleConfig_load() {
 	c := New(os.DirFS("."), os.Stdout)
 
 	c.Load("config.json", json.Unmarshal)
+	c.Load("config.local.yaml", yaml.Unmarshal)
 }
 
 func ExampleConfig_getValue() {

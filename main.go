@@ -4,6 +4,7 @@ import (
 	"config-chg/config"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
 )
 
@@ -15,7 +16,7 @@ func main() {
 	fmt.Println(config.Get("database"))
 	fmt.Println(config.Get("cache"))
 
-	config.Load("fixtures/config.local.json", json.Unmarshal)
+	config.Load("fixtures/config.local.yaml", yaml.Unmarshal)
 	fmt.Println(config.Get("environment"))
 	fmt.Println(config.Get("database"))
 	fmt.Println(config.Get("cache"))
