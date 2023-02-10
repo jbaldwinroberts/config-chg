@@ -251,30 +251,47 @@ func TestGet(t *testing.T) {
 	c.Load("config.json", json.Unmarshal)
 	assertNilError(t, buffer)
 
-	t.Run("Get a non-existent value", func(t *testing.T) {
-		got := c.Get("protocol")
-		assertValue(t, got, "")
-	})
+	type test struct {
+		name string
+		path string
+		want any
+	}
 
-	t.Run("Get an outer value", func(t *testing.T) {
-		got := c.Get("environment")
-		assertValue(t, got, "production")
-	})
-
-	t.Run("Get an inner value", func(t *testing.T) {
-		got := c.Get("cache.redis.port")
-		assertValue(t, got, float64(6379))
-	})
-
-	t.Run("Get an outer section", func(t *testing.T) {
-		got := c.Get("database")
-		assertValue(t, got, map[string]any{
-			"host":     "mysql",
-			"port":     float64(3306),
-			"username": "divido",
-			"password": "divido",
-		})
-	})
+	tests := []test{
+		{
+			name: "get a non-existent value",
+			path: "protocol",
+			want: "",
+		},
+		{
+			name: "get an outer value",
+			path: "environment",
+			want: "production",
+		},
+		{
+			name: "get an inner value",
+			path: "cache.redis.port",
+			want: float64(6379),
+		},
+		{
+			name: "get an outer section",
+			path: "database",
+			want: map[string]any{
+				"host":     "mysql",
+				"port":     float64(3306),
+				"username": "divido",
+				"password": "divido",
+			},
+		},
+		{
+			name: "get an inner section",
+			path: "cache.redis",
+			want: map[string]any{
+				"host": "redis",
+				"port": float64(6379),
+			},
+		},
+	}
 
 	t.Run("Get an inner section", func(t *testing.T) {
 		got := c.Get("cache.redis")
@@ -283,6 +300,13 @@ func TestGet(t *testing.T) {
 			"port": float64(6379),
 		})
 	})
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := c.Get(tc.path)
+			assertValue(t, got, tc.want)
+		})
+	}
 }
 
 func TestConcurrency(t *testing.T) {
