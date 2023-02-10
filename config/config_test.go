@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/pelletier/go-toml"
 	"gopkg.in/yaml.v3"
+	"reflect"
 	"sync"
 	"testing"
 	"testing/fstest"
@@ -28,8 +29,8 @@ const (
 	 }
 	}`
 
-	// I've removed the unchanged fields from configLocalJson to test that
-	// existing fields in the configJson above don't get changed or removed
+	// I've removed unchanged fields from the local config files to test that
+	// existing fields in the config above don't get changed or removed
 	configLocalJson = `{
   "environment": "development",
   "database": {
@@ -142,7 +143,6 @@ func TestLoad_MultipleConfig(t *testing.T) {
 		name  string
 		files []file
 		fs    fstest.MapFS
-		want  map[string]any
 	}
 
 	tests := []test{
@@ -156,21 +156,6 @@ func TestLoad_MultipleConfig(t *testing.T) {
 				{name: "config.json", parser: json.Unmarshal},
 				{name: "configLocal.json", parser: json.Unmarshal},
 			},
-			want: map[string]any{
-				"environment": "development",
-				"database": map[string]any{
-					"host":     "127.0.0.1",
-					"port":     float64(3306),
-					"username": "divido",
-					"password": "divido",
-				},
-				"cache": map[string]any{
-					"redis": map[string]any{
-						"host": "127.0.0.1",
-						"port": float64(6379),
-					},
-				},
-			},
 		},
 		{
 			name: "with a valid json file and a valid yaml file",
@@ -182,21 +167,6 @@ func TestLoad_MultipleConfig(t *testing.T) {
 				{name: "config.json", parser: json.Unmarshal},
 				{name: "configLocal.yaml", parser: yaml.Unmarshal},
 			},
-			want: map[string]any{
-				"environment": "development",
-				"database": map[string]any{
-					"host":     "127.0.0.1",
-					"port":     int(3306),
-					"username": "divido",
-					"password": "divido",
-				},
-				"cache": map[string]any{
-					"redis": map[string]any{
-						"host": "127.0.0.1",
-						"port": float64(6379),
-					},
-				},
-			},
 		},
 		{
 			name: "with a valid json file and a valid toml file",
@@ -207,21 +177,6 @@ func TestLoad_MultipleConfig(t *testing.T) {
 			files: []file{
 				{name: "config.json", parser: json.Unmarshal},
 				{name: "configLocal.toml", parser: toml.Unmarshal},
-			},
-			want: map[string]any{
-				"environment": "development",
-				"database": map[string]any{
-					"host":     "127.0.0.1",
-					"port":     int64(3306),
-					"username": "divido",
-					"password": "divido",
-				},
-				"cache": map[string]any{
-					"redis": map[string]any{
-						"host": "127.0.0.1",
-						"port": float64(6379),
-					},
-				},
 			},
 		},
 	}
@@ -236,7 +191,23 @@ func TestLoad_MultipleConfig(t *testing.T) {
 				assertNilError(t, buffer)
 			}
 
-			assertValue(t, c.config, tc.want)
+			want := map[string]any{
+				"environment": "development",
+				"database": map[string]any{
+					"host":     "127.0.0.1",
+					"port":     float64(3306),
+					"username": "divido",
+					"password": "divido",
+				},
+				"cache": map[string]any{
+					"redis": map[string]any{
+						"host": "127.0.0.1",
+						"port": float64(6379),
+					},
+				},
+			}
+
+			assertValue(t, c.config, want)
 		})
 	}
 }
@@ -359,7 +330,20 @@ func assertNilError(t *testing.T, buffer *bytes.Buffer) {
 func assertValue(t *testing.T, got, want any) {
 	t.Helper()
 
-	if diff := cmp.Diff(want, got); diff != "" {
+	// This is used to convert numeric types to float64 during the comparison
+	// and is needed as json/toml/yaml unmarshal numbers slightly differently
+	opt := cmp.FilterValues(func(x, y interface{}) bool {
+		isNumeric := func(v interface{}) bool {
+			return v != nil && reflect.TypeOf(v).ConvertibleTo(reflect.TypeOf(float64(0)))
+		}
+		return isNumeric(x) && isNumeric(y)
+	},
+		cmp.Transformer("T", func(v interface{}) float64 {
+			return reflect.ValueOf(v).Convert(reflect.TypeOf(float64(0))).Float()
+		}),
+	)
+
+	if diff := cmp.Diff(want, got, opt); diff != "" {
 		t.Errorf("assert mismatch (-want +got):\n%s", diff)
 	}
 }
