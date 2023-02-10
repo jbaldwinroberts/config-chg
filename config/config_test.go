@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/google/go-cmp/cmp"
+	toml "github.com/pelletier/go-toml"
 	"gopkg.in/yaml.v3"
 	"sync"
 	"testing"
@@ -49,6 +50,15 @@ database:
 cache:
   redis:
     host: 127.0.0.1`
+
+	configLocalToml = `environment = "development"
+
+[database]
+host = "127.0.0.1"
+port = 3_306
+
+[cache.redis]
+host = "127.0.0.1"`
 
 	configInvalid = `This is not a valid JSON file`
 )
@@ -153,6 +163,38 @@ func TestLoadJson(t *testing.T) {
 			"database": map[string]any{
 				"host":     "127.0.0.1",
 				"port":     int(3306),
+				"username": "divido",
+				"password": "divido",
+			},
+			"cache": map[string]any{
+				"redis": map[string]any{
+					"host": "127.0.0.1",
+					"port": float64(6379),
+				},
+			},
+		}
+
+		assertValue(t, c.config, want)
+	})
+
+	t.Run("with a valid json file and a valid toml file", func(t *testing.T) {
+		fs := fstest.MapFS{
+			"config.json":      {Data: []byte(configJson)},
+			"configLocal.toml": {Data: []byte(configLocalToml)},
+		}
+		buffer := &bytes.Buffer{}
+		c := New(fs, buffer)
+
+		c.Load("config.json", json.Unmarshal)
+		assertNilError(t, buffer)
+		c.Load("configLocal.toml", toml.Unmarshal)
+		assertNilError(t, buffer)
+
+		want := map[string]any{
+			"environment": "development",
+			"database": map[string]any{
+				"host":     "127.0.0.1",
+				"port":     int64(3306),
 				"username": "divido",
 				"password": "divido",
 			},

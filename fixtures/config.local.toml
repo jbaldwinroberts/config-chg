@@ -1,0 +1,11 @@
+environment = "development"
+
+[database]
+host = "127.0.0.1"
+port = 3_306
+username = "divido"
+password = "divido"
+
+[cache.redis]
+host = "127.0.0.1"
+port = 6_379
